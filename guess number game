@@ -1,0 +1,38 @@
+import random
+
+
+def player(start, end):
+    global p1
+    p1 = random.randint(start, end)
+    print("Player1 num is " + str(p1))
+    global p2
+    p2 = random.randint(start, end)
+    print("Player2 num is " + str(p2))
+    global p3
+    p3 = random.randint(start, end)
+    print("Player2 num is " + str(p3))
+
+
+def game(start, end):
+    i = 0
+    while True:
+        i += 1
+        target_num = random.randint(start, end)
+        print("I think a num to guess:" + str(target_num))
+        player(start, end)
+        if (p1 == target_num) or (p2 == target_num) or (p3 == target_num):
+            if p1 == target_num:
+                print("Player1 is right!")
+            if p2 == target_num:
+                print("Player2 is right!")
+            if p3 == target_num:
+                print("Player3 is right!")
+            break
+        else:
+            print("Nobody right,try again!")
+    print("我们一共猜了：" + str(i) + "次")
+
+
+game(0, 100)
+
+
