@@ -1,0 +1,242 @@
+import random
+import pyHook
+import numpy
+import time
+class Game():
+    def __init__(self,xnum=4,ynum=4):
+        #初始化
+        #虽然x=4,y=4，但是外面也可以往里传数据
+        self.xnum=xnum
+        self.ynum=ynum
+        #得分，初始化为0
+        self.score=0
+        #随机出现的数，只能是2、4
+        self.randdata=[2,4]
+        #生成对应长度的二维列表，充当棋盘
+        self.data=[[0 for i in range(0,xnum)]for i in range (0,ynum)]
+        
+    def trans(self,lista):
+        #转置矩阵,引入numpy模块
+        '''
+        numpy.transpose(list)返回的是一个转置以后的矩阵，不是列表。
+        在后面加上.tolist()，才能返回一个列表
+        '''
+        listb=numpy.transpose(lista).tolist()
+        return listb
+          
+    def createdata(self):
+        #随机产生2、4，随机的放在0的位置上
+        self.thisdata=random.choice(self.randdata)
+        zeros=[]
+        for i in range(0,len(self.data)):
+            for j in range(0,len(self.data[i])):
+                if(self.data[i][j]==0):
+                    zeros.append((i,j))
+        self.thisposition=random.choice(zeros)
+        self.data[self.thisposition[0]][self.thisposition[1]]=self.thisdata
+        
+    def lmerge(self):
+        #左滑动合并
+        for i in range(0,len(self.data)):
+            for j in range(0,len(self.data[i])):
+                if(self.data[i][j]==self.data[i][j-1]):
+                     self.data[i][j-1]=self.data[i][j-1]*2
+                     self.score=self.data[i][j-1]+self.score
+                     self.data[i][j]=0
+       
+    def rmerge(self):
+        #右滑动合并
+        for i in range(0,len(self.data)):
+            for j in range(len(self.data[i])-1,0,-1):
+                if(self.data[i][j]==self.data[i][j-1]):
+                    self.data[i][j]=self.data[i][j]*2
+                    self.score=self.data[i][j]+self.score
+                    self.data[i][j-1]=0                   
+        
+    def umerge(self):
+        #上滑动合并
+        trans_data=self.trans(self.data)
+        for i in range(0,len(trans_data)):
+            for j in range(0,len(trans_data[i])):
+                if(trans_data[i][j]==trans_data[i][j-1]):
+                     trans_data[i][j-1]=trans_data[i][j-1]*2
+                     self.score=trans_data[i][j-1]+self.score
+                     trans_data[i][j]=0
+        self.data=self.trans(trans_data)
+        
+    def dmerge(self):
+        #下滑动合并
+        trans_data=self.trans(self.data)
+        for i in range(0,len(trans_data)):
+            for j in range(len(trans_data[i])-1,0,-1):
+                if(trans_data[i][j]==trans_data[i][j-1]):
+                    trans_data[i][j]=trans_data[i][j]*2
+                    self.score=trans_data[i][j]+self.score
+                    trans_data[i][j-1]=0
+        self.data=self.trans(trans_data)
+        
+    def left(self):
+        #向左滑动
+        for i in range(0,len(self.data)):
+            thisline=self.data[i]
+            can_movepos=None
+            for j in range(0,len(thisline)):
+                if(thisline[j]==0):
+                    if(j!=0):
+                        if(self.data[i][j]==self.data[i][j-1]):
+                            pass
+                        else:
+                            can_movepos=j
+                    else:
+                        can_movepos=j
+                else:
+                    if(can_movepos==None):
+                        pass
+                    else:
+                        if(can_movepos<j):
+                            self.data[i][can_movepos]=thisline[j]
+                            can_movepos +=1
+                            self.data[i][j]=0
+                            
+    def right(self):
+        #向右滑动
+        for i in range(0,len(self.data)):
+            thisline=self.data[i]
+            can_movepos=None
+            for j in range(len(thisline)-1,-1,-1):
+                if(thisline[j]==0):
+                    if(j<len(thisline)-1):
+                        if(self.data[i][j]==self.data[i][j+1]):
+                            pass
+                        else:
+                            can_movepos=j
+                    else:
+                        can_movepos=j
+                else:
+                    if(can_movepos==None):
+                        pass
+
+                    else:
+                        if(can_movepos>j):
+                            self.data[i][can_movepos]=thisline[j]
+                            can_movepos -=1
+                            self.data[i][j]=0                    
+        
+    def up(self):
+        #向上滑动
+        thisupdata=self.data
+        trans_data=self.trans(thisupdata)
+        for i in range(0,len(trans_data)):
+            thisline=trans_data[i]
+            can_movepos=None
+            for j in range(0,len(thisline)):
+                if(thisline[j]==0):
+                    if(j!=0):
+                        if(trans_data[i][j]==trans_data[i][j-1]):
+                            pass
+                        else:
+                            can_movepos=j
+                    else:
+                        can_movepos=j
+                else:
+                    if(can_movepos==None):
+                        pass
+                    else:
+                        if(can_movepos<j):
+                            trans_data[i][can_movepos]=thisline[j]
+                            can_movepos +=1
+                            trans_data[i][j]=0
+        self.data=self.trans(trans_data)
+
+        
+    def down(self):
+        #向下滑动
+        trans_data=self.trans(self.data)
+        for i in range(0,len(trans_data)):
+            thisline=trans_data[i]
+            can_movepos=None
+            for j in range(len(thisline)-1,-1,-1):
+                if(thisline[j]==0):
+                    if(j<len(thisline)-1):
+                        if(trans_data[i][j]==trans_data[i][j+1]):
+                            pass
+                        else:
+                            can_movepos=j
+                    else:
+                        can_movepos=j
+                else:
+                    if(can_movepos==None):
+                        pass
+
+                    else:
+                        if(can_movepos>j):
+                            trans_data[i][can_movepos]=thisline[j]
+                            can_movepos -=1
+                            trans_data[i][j]=0                    
+        self.data=self.trans(trans_data)
+        
+
+    def show(self):
+        #判断输赢，输出得分
+        #若尚未输赢，则继续游戏
+        
+        print('--------------------------')
+        for i in range(0,len(self.data)):
+            for j in range(0,len(self.data[i])):
+                print(self.data[i][j],end='\t')
+            print('\n')
+        print('--------------------------')
+        data1=sum(self.data,[])
+        if(data1.count(16)>=1):
+            print("恭喜你，赢了！！！\n你的最终得分是："+str(self.score))
+            print("程序将在3秒后关闭。")
+            time.sleep(3)
+            #exit(0)
+        if(data1.count(0)==0):
+            print("对不起，你已经输了！！！\n你的最终得分是："+str(self.score))
+            print("程序将在3秒后关闭。")
+            time.sleep(3)
+            #exit(0)
+        print("你当前得分是："+str(self.score))
+    def listenanddo(self,mypresskey):
+        #按键监听与对应处理
+        thiskey=mypresskey.Key
+        if(thiskey=="F10"):
+            #启动或重启程序
+            self.data=[[0 for i in range(0,self.xnum)] for i in range(0,self.ynum)]
+            self.createdata()
+            self.show()
+        elif(thiskey=="Escape"):
+            print("您是否想终止游戏？若是：Ctrl+C")
+        elif(thiskey=="Left"):
+            self.left()
+            self.lmerge()
+            self.left()
+            self.createdata()
+            self.show()
+        elif(thiskey=="Right"):
+            self.right()
+            self.rmerge()
+            self.right()
+            self.createdata()
+            self.show()
+        elif(thiskey=="Up"):
+            self.up()
+            self.umerge()
+            self.up()
+            self.createdata()
+            self.show()
+        elif(thiskey=="Down"):
+            self.down()
+            self.dmerge()
+            self.down()
+            self.createdata()
+            self.show()
+        return True
+  
+    def main(self):
+        #主控程序
+        hook=pyHook.HookManager()
+        hook.KeyDown=self.listenanddo
+        hook.HookKeyboard()
+        
